@@ -24,6 +24,11 @@ public class Cell {
         return shape;
     }
 
+    public Point getCenter() {
+        return shape.getCenter();
+    }
+
+
     void grow(double amount) {
         setRadius(radius + amount);
     }
@@ -38,7 +43,7 @@ public class Cell {
         shape.setCenter(previousCenter);
     }
 
-    void moveAround(Point centerOfGravity) {
+    public void moveAround(Point centerOfGravity) {
         shape.moveBy(Math.cos(direction), Math.sin(direction));
 
         double distToCenter = shape.getCenter().distance(centerOfGravity);
@@ -49,6 +54,33 @@ public class Cell {
             direction
                 + (Math.random() - 0.5) * WIGGLINESS
                 + turnTowardCenter * Math.tanh(distToCenter / WANDER_FROM_CENTER));
+    }
+    public void interactWith(Cell otherCell) {
+        if (radius == 0 || otherCell.radius == 0) {
+            return;
+        }
+        if (overlapAmount(otherCell) < 0) {
+            return;
+        }
+
+        if (radius > otherCell.radius) {
+            absorb(otherCell);
+        } else {
+            otherCell.absorb(this);
+        }
+    }
+
+    private double overlapAmount(Cell otherCell) {
+        return radius + otherCell.radius - getCenter().distance(otherCell.getCenter());
+    }
+
+    private void absorb(Cell otherCell) {
+        double d = getCenter().distance(otherCell.getCenter());
+        double a = sqr(radius) + sqr(otherCell.radius);
+        double newRadius = (d + Math.sqrt(2 * a - sqr(d))) / 2;
+
+        setRadius(newRadius);
+        otherCell.setRadius(d - newRadius);
     }
 
     private static double sqr(double x) {
